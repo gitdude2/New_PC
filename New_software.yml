@@ -1,0 +1,49 @@
+---
+
+- name: Universal software installation playbook
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update package cache
+      package:
+        update_cache: yes
+      when: ansible_pkg_mgr == "apt"  # עבור מערכות המשתמשות ב-APT (Debian/Ubuntu)
+
+    - name: Update package cache (RedHat/CentOS)
+      package:
+        update_cache: yes
+      when: ansible_pkg_mgr == "yum"  # עבור מערכות המשתמשות ב-YUM (RedHat/CentOS)
+
+    - name: Install common packages
+      package:
+        name:
+          - git
+          - vim
+          - curl
+          - wget
+          - htop
+          - btop
+        state: present
+      when: ansible_pkg_mgr in ["apt", "yum"]  # לכל הפצות המשתמשות במנהלי חבילות של APT או YUM
+
+    - name: Install Docker packages
+      package:
+        name:
+          - docker.io
+          - docker-compose
+        state: latest
+      when: ansible_pkg_mgr in ["apt", "yum"]  # לכל הפצות המשתמשות במנהלי חבילות של APT או YUM
+
+    - name: Start and enable Docker service
+      ansible.builtin.service:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Install Python and pip
+      package:
+        name:
+          - python3
+          - python3-pip
+        state: present
+      when: ansible_pkg_mgr in ["apt", "yum"]  # לכל הפצות המשתמשות במנהלי חבילות של APT או YUM
